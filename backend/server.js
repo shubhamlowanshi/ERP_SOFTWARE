@@ -15,11 +15,19 @@ connectDB();
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://erp-software-1zwxgc49d-shubhamlowansho-4970s-projects.vercel.app"
+];
 app.use(cors({
-  origin: "http://localhost:5173",   // frontend URL
-  credentials: true,
-  methods: ["GET","POST","PUT","DELETE"],
-  allowedHeaders: ["Content-Type","Authorization"]
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
 }));
 app.use("/api/auth", authRoutes);
 app.use("/api/inventory", inventoryRoutes);
