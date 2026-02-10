@@ -23,11 +23,6 @@ const Login = () => {
       // ✅ Store token & user exactly as Inventory expects
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-
-      console.log("Token:", data.token);
-      console.log("User:", data.user);
-      console.log("TOKEN:", localStorage.getItem("token"));
-
       navigate("/dashboard");
     } catch (err) {
       alert(err.response?.data?.message || "Login failed ❌");
