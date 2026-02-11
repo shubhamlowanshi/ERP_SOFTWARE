@@ -21,7 +21,6 @@ Thank you for shopping with us 🙏
 
 Total Purchase: ₹${c.totalPurchase}
 
-
 Visit again ❤️
 `;
 
@@ -33,49 +32,93 @@ Visit again ❤️
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Customers</h2>
+    <div className="p-6 bg-gradient-to-br from-gray-50 to-white min-h-screen">
 
-      <table className="w-full bg-white shadow rounded">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-3 text-left">Name</th>
-            <th className="p-3">Mobile</th>
-            <th className="p-3">Email</th>
-            <th className="p-3">Total</th>
-            
-            <th className="p-3">Action</th>
-          </tr>
-        </thead>
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-3xl font-extrabold text-gray-800 tracking-tight">
+          Customers
+        </h2>
 
-        <tbody>
-          {data.map((c, i) => (
-            <tr key={i} className="border-b">
-              <td className="p-3">{c.customerName}</td>
+        <span className="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-sm font-semibold">
+          Total: {data.length}
+        </span>
+      </div>
 
-              <td className="p-3 text-center">
-                {c.customerMobile}
-              </td>
+      {/* TABLE CARD */}
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
 
-              <td className="p-3 text-center">
-                {c.customerEmail || "—"}
-              </td>
+        {/* SCROLL AREA */}
+        <div className="overflow-x-auto max-h-[72vh] overflow-y-auto">
 
-              <td className="p-3 text-center">
-                ₹{c.totalPurchase}
-              </td>
-              <td className="p-3 text-center">
-                <button
-                  onClick={() => sendWhatsApp(c)}
-                  className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+          <table className="w-full">
+            <thead className="sticky top-0 bg-gray-50 border-b z-10">
+              <tr className="text-gray-600 text-sm uppercase">
+                <th className="p-4 text-left">Name</th>
+                <th className="p-4">Mobile</th>
+                <th className="p-4">Email</th>
+                <th className="p-4">Total</th>
+                <th className="p-4">Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {data.map((c, i) => (
+                <tr
+                  key={i}
+                  className="border-b hover:bg-blue-50 transition duration-150"
                 >
-                  WhatsApp
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  <td className="p-4 font-semibold text-gray-800">
+                    {c.customerName}
+                  </td>
+
+                  <td className="p-4 text-center text-gray-700">
+                    {c.customerMobile}
+                  </td>
+
+                  <td className="p-4 text-center text-gray-600">
+                    {c.customerEmail || "—"}
+                  </td>
+
+                  <td className="p-4 text-center">
+                    <span className="font-bold text-green-700 bg-green-50 px-3 py-1 rounded-lg">
+                      ₹{c.totalPurchase}
+                    </span>
+                  </td>
+
+                  <td className="p-4 text-center">
+                    <button
+                      onClick={() => sendWhatsApp(c)}
+                      className="
+                        bg-green-600 text-white 
+                        px-4 py-1.5 rounded-xl 
+                        hover:bg-green-700 
+                        transition duration-150
+                        shadow
+                      "
+                    >
+                      WhatsApp
+                    </button>
+                  </td>
+                </tr>
+              ))}
+
+              {/* EMPTY STATE */}
+              {data.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="text-center p-10 text-gray-400"
+                  >
+                    No customers found yet 😔
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+        </div>
+      </div>
     </div>
   );
 };

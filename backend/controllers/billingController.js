@@ -9,6 +9,7 @@ const sendError = (res, msg, status = 400) =>
 
 /* =========================
    CREATE BILL (ATOMIC)
+   LOGIC SAME – SPEED BETTER
 ========================= */
 export const createBill = async (req, res) => {
   const session = await mongoose.startSession();
@@ -30,16 +31,20 @@ export const createBill = async (req, res) => {
 
     if (!items?.length) return sendError(res, "No items in bill");
 
-    // 👉 Sare products ek baar me le aao – no double DB hit
+    // 👉 lean use = fast read
     const productIds = items.map((i) => i.productId);
+
     const products = await Inventory.find({
       _id: { $in: productIds },
-    }).session(session);
+    })
+      .session(session)
+      .lean();       // 👈 BIG PERFORMANCE WIN
 
     const productMap = new Map();
     products.forEach((p) => productMap.set(p._id.toString(), p));
 
     const itemsWithCost = [];
+    const bulkOps = [];
 
     for (const item of items) {
       const product = productMap.get(item.productId);
@@ -54,12 +59,22 @@ export const createBill = async (req, res) => {
         return sendError(res, `${product.productName} out of stock`);
       }
 
-      // stock update
-      product.stock -= item.quantity;
-      product.soldQty += item.quantity;
-      product.value = product.stock * product.costPrice;
+      // 👉 instead of save() in loop → bulkWrite
+      const newStock = product.stock - item.quantity;
+      const newSold = (product.soldQty || 0) + item.quantity;
 
-      await product.save({ session });
+      bulkOps.push({
+        updateOne: {
+          filter: { _id: product._id },
+          update: {
+            $set: {
+              stock: newStock,
+              soldQty: newSold,
+              value: newStock * product.costPrice,
+            },
+          },
+        },
+      });
 
       itemsWithCost.push({
         productId: item.productId,
@@ -69,6 +84,11 @@ export const createBill = async (req, res) => {
         costPrice: product.costPrice,
         total: item.unitPrice * item.quantity,
       });
+    }
+
+    // 👉 1 DB HIT FOR ALL STOCK UPDATE
+    if (bulkOps.length) {
+      await Inventory.bulkWrite(bulkOps, { session });
     }
 
     const dueAmount = totalAmount - paidAmount;
@@ -119,7 +139,7 @@ export const getBillById = async (req, res) => {
     const bill = await Billing.findOne({
       _id: req.params.id,
       createdBy: req.user.id,
-    });
+    }).lean();   // 👈 read only → lean
 
     if (!bill) return sendError(res, "Bill not found", 404);
 
@@ -134,9 +154,11 @@ export const getBillById = async (req, res) => {
 ========================= */
 export const getAllSales = async (req, res) => {
   try {
-    const sales = await Billing.find({ createdBy: req.user.id }).sort({
-      createdAt: -1,
-    });
+    const sales = await Billing.find(
+      { createdBy: req.user.id }
+    )
+      .sort({ createdAt: -1 })
+      .lean();   // 👈 fast
 
     res.json({ sales });
   } catch (err) {
@@ -155,7 +177,9 @@ export const getDailySales = async (req, res) => {
           createdBy: new mongoose.Types.ObjectId(req.user.id),
         },
       },
+
       { $unwind: "$items" },
+
       {
         $group: {
           _id: {
@@ -170,7 +194,9 @@ export const getDailySales = async (req, res) => {
           },
         },
       },
+
       { $sort: { "_id.date": 1 } },
+
       {
         $group: {
           _id: "$_id.productName",
@@ -238,17 +264,18 @@ export const getAllCustomers = async (req, res) => {
           createdBy: new mongoose.Types.ObjectId(req.user.id),
         },
       },
-
       {
         $group: {
           _id: "$customerMobile",
 
-          customerName: { $first: "$customerName" },
-          customerEmail: { $first: "$customerEmail" },
-          customerMobile: { $first: "$customerMobile" },
+          customerName: { $last: "$customerName" },
+          customerEmail: { $last: "$customerEmail" },
+          customerMobile: { $last: "$customerMobile" },
 
           totalPurchase: { $sum: "$totalAmount" },
           totalPaid: { $sum: "$paidAmount" },
+
+          lastBillDate: { $max: "$createdAt" },
 
           bills: {
             $push: {
@@ -282,7 +309,8 @@ export const getAllCustomers = async (req, res) => {
         },
       },
 
-      { $sort: { customerName: 1 } },
+      // ✅ REAL HERO SORT
+      { $sort: { lastBillDate: -1 } },
     ]);
 
     res.json({ customers });
@@ -291,3 +319,5 @@ export const getAllCustomers = async (req, res) => {
     res.status(500).json({ message: "Customer fetch failed" });
   }
 };
+
+

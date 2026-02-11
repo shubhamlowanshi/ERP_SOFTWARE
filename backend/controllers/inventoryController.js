@@ -1,6 +1,7 @@
 import Inventory from "../models/Inventory.js";
 import Billing from "../models/Billing.js";
 import mongoose from "mongoose";
+import { notifyLowStock } from "../utils/notify.js";
 
 const sendError = (res, msg, status = 400) =>
   res.status(status).json({ message: msg });
@@ -59,7 +60,7 @@ export const updateProduct = async (req, res) => {
     const { stock, costPrice } = req.body;
 
     const updated = await Inventory.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.id }, // 🔥 security
+      { _id: req.params.id, userId: req.user.id }, // 🔥 security OP
       {
         ...req.body,
         value: stock * costPrice,
@@ -69,6 +70,11 @@ export const updateProduct = async (req, res) => {
     );
 
     if (!updated) return sendError(res, "Product not found", 404);
+
+    // 🚨 YAHI MAIN HERO HAI
+    if (updated.stock < 10) {
+      notifyLowStock(req.user.id, updated);
+    }
 
     res.json(updated);
   } catch (err) {
@@ -116,6 +122,11 @@ export const reduceStock = async (req, res) => {
     product.status = getStockStatus(product.stock);
 
     await product.save();
+
+    // 🚨 REAL HERO LINE
+    if (product.stock < 10) {
+      notifyLowStock(req.user.id, product);
+    }
 
     res.json({ message: "Stock updated", product });
   } catch (err) {
@@ -210,3 +221,4 @@ export const getDashboardOverview = async (req, res) => {
     sendError(res, "Dashboard fetch failed", 500);
   }
 };
+                                                

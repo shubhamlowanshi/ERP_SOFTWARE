@@ -18,7 +18,7 @@ const Reports = () => {
   useEffect(() => {
     const fetchSales = async () => {
       try {
-        const res = await api.get("/billing"); // ✅ matches backend
+        const res = await api.get("/billing");
         setSales(res.data.sales || []);
       } catch (err) {
         console.error("Report fetch error:", err);
@@ -38,7 +38,8 @@ const Reports = () => {
       let key = "";
 
       if (type === "weekly") key = `${date.getFullYear()}-W${getWeekNumber(date)}`;
-      else if (type === "monthly") key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`;
+      else if (type === "monthly")
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       else key = `${date.getFullYear()}`;
 
       acc[key] = (acc[key] || 0) + (sale.totalAmount || 0);
@@ -46,7 +47,10 @@ const Reports = () => {
     }, {});
   }, [sales, type]);
 
-  const grandTotal = useMemo(() => sales.reduce((sum,s)=>sum+(s.totalAmount||0),0), [sales]);
+  const grandTotal = useMemo(
+    () => sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0),
+    [sales]
+  );
 
   const downloadPDF = () => {
     const doc = new jsPDF();
@@ -56,61 +60,129 @@ const Reports = () => {
     doc.text(`Report Type: ${type.toUpperCase()}`, 14, 25);
     doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 14, 32);
 
-    const tableData = Object.entries(groupedData).map(([key,value])=>[key,`₹ ${value.toFixed(2)}`]);
+    const tableData = Object.entries(groupedData).map(([key, value]) => [
+      key,
+      `₹ ${value.toFixed(2)}`,
+    ]);
 
-    autoTable(doc,{
-      startY:40,
-      head:[[type==="weekly"?"Week":type==="monthly"?"Month":"Year","Total Sales (₹)"]],
-      body: tableData.length? tableData:[["—","₹ 0.00"]],
-      styles:{halign:"center"},
-      headStyles:{fillColor:[37,99,235]}
+    autoTable(doc, {
+      startY: 40,
+      head: [
+        [
+          type === "weekly" ? "Week" : type === "monthly" ? "Month" : "Year",
+          "Total Sales (₹)",
+        ],
+      ],
+      body: tableData.length ? tableData : [["—", "₹ 0.00"]],
+      styles: { halign: "center" },
+      headStyles: { fillColor: [37, 99, 235] },
     });
 
-    doc.text(`Overall Sales: ₹ ${grandTotal.toFixed(2)}`, 14, doc.lastAutoTable.finalY + 10);
+    doc.text(
+      `Overall Sales: ₹ ${grandTotal.toFixed(2)}`,
+      14,
+      doc.lastAutoTable.finalY + 10
+    );
+
     doc.save(`sales-report-${type}.pdf`);
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Sales Reports</h2>
+    <div className="p-6 bg-gradient-to-br from-gray-50 to-white min-h-screen">
 
-      <div className="flex gap-3 mb-4">
-        {["weekly","monthly","yearly"].map(t=>(
-          <button key={t} onClick={()=>setType(t)}
-            className={`px-4 py-2 rounded font-semibold ${type===t?"bg-blue-600 text-white":"bg-gray-200 hover:bg-gray-300"}`}>
-            {t.toUpperCase()}
-          </button>
-        ))}
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <h2 className="text-3xl font-extrabold text-gray-800">
+          Sales Reports
+        </h2>
+
+        <div className="flex flex-wrap gap-2">
+          {["weekly", "monthly", "yearly"].map((t) => (
+            <button
+              key={t}
+              onClick={() => setType(t)}
+              className={`
+                px-4 py-2 rounded-xl font-semibold transition
+                ${
+                  type === t
+                    ? "bg-blue-600 text-white shadow-lg"
+                    : "bg-gray-200 hover:bg-gray-300"
+                }
+              `}
+            >
+              {t.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <button onClick={downloadPDF} className="mb-4 bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700">
-        📥 Download PDF
-      </button>
+      {/* ACTION BAR */}
+      <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={downloadPDF}
+          className="
+            bg-green-600 text-white px-5 py-2 rounded-xl
+            hover:bg-green-700 transition shadow
+          "
+        >
+          📥 Download PDF
+        </button>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="border p-2">{type==="weekly"?"Week":type==="monthly"?"Month":"Year"}</th>
-              <th className="border p-2">Total Sales (₹)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.keys(groupedData).length===0?(
-              <tr><td colSpan="2" className="text-center p-4 text-gray-500">No data available</td></tr>
-            ):(
-              Object.entries(groupedData).map(([key,total])=>(
-                <tr key={key}>
-                  <td className="border p-2 font-semibold">{key}</td>
-                  <td className="border p-2 text-green-600 font-bold">₹{total.toFixed(2)}</td>
+        <div className="text-lg font-bold bg-blue-50 px-4 py-2 rounded-xl">
+          Overall: ₹{grandTotal.toFixed(2)}
+        </div>
+      </div>
+
+      {/* TABLE CARD */}
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
+
+        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr className="text-gray-600 uppercase text-sm">
+                <th className="border p-3">
+                  {type === "weekly"
+                    ? "Week"
+                    : type === "monthly"
+                    ? "Month"
+                    : "Year"}
+                </th>
+                <th className="border p-3">Total Sales (₹)</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {Object.keys(groupedData).length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="2"
+                    className="text-center p-10 text-gray-400"
+                  >
+                    No data available 😔
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                Object.entries(groupedData).map(([key, total]) => (
+                  <tr
+                    key={key}
+                    className="hover:bg-blue-50 transition"
+                  >
+                    <td className="border p-3 font-semibold text-center">
+                      {key}
+                    </td>
 
-      <div className="text-right mt-4 text-lg font-bold">Overall Sales: ₹{grandTotal.toFixed(2)}</div>
+                    <td className="border p-3 text-center">
+                      <span className="bg-green-50 text-green-700 px-3 py-1 rounded-lg font-bold">
+                        ₹{total.toFixed(2)}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

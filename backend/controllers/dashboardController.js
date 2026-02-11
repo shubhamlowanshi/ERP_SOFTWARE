@@ -18,61 +18,68 @@ export const getDashboardOverview = async (req, res) => {
       1
     );
 
-    // 👉 1. TODAY SALES
-    const [todaySalesAgg] = await Billing.aggregate([
-      {
-        $match: {
-          createdBy: userId,
-          createdAt: { $gte: today },
-        },
-      },
-      {
-        $group: { _id: null, total: { $sum: "$totalAmount" } },
-      },
-    ]);
+    // 👉 ALL HEAVY QUERIES IN PARALLEL
+    const [todaySalesAgg, monthlyAgg, profitAgg, lowStockItems] =
+      await Promise.all([
 
-    // 👉 2. MONTHLY REVENUE
-    const [monthlyAgg] = await Billing.aggregate([
-      {
-        $match: {
-          createdBy: userId,
-          createdAt: { $gte: startOfMonth },
-        },
-      },
-      {
-        $group: { _id: null, total: { $sum: "$totalAmount" } },
-      },
-    ]);
-
-    // 👉 3. PROFIT — FULL DB SIDE CALCULATION
-    const [profitAgg] = await Billing.aggregate([
-      { $match: { createdBy: userId } },
-      { $unwind: "$items" },
-      {
-        $group: {
-          _id: null,
-          profit: {
-            $sum: {
-              $multiply: [
-                { $subtract: ["$items.unitPrice", "$items.costPrice"] },
-                "$items.quantity",
-              ],
+        // 1. TODAY SALES
+        Billing.aggregate([
+          {
+            $match: {
+              createdBy: userId,
+              createdAt: { $gte: today },
             },
           },
-        },
-      },
-    ]);
+          {
+            $group: { _id: null, total: { $sum: "$totalAmount" } },
+          },
+        ]),
 
-    // 👉 4. LOW STOCK
-    const lowStockItems = await Inventory.find({
-      userId,
-      stock: { $lte: 10 },
-    }).select("productName stock -_id");
+        // 2. MONTHLY REVENUE
+        Billing.aggregate([
+          {
+            $match: {
+              createdBy: userId,
+              createdAt: { $gte: startOfMonth },
+            },
+          },
+          {
+            $group: { _id: null, total: { $sum: "$totalAmount" } },
+          },
+        ]),
+
+        // 3. PROFIT CALCULATION
+        Billing.aggregate([
+          { $match: { createdBy: userId } },
+          { $unwind: "$items" },
+          {
+            $group: {
+              _id: null,
+              profit: {
+                $sum: {
+                  $multiply: [
+                    { $subtract: ["$items.unitPrice", "$items.costPrice"] },
+                    "$items.quantity",
+                  ],
+                },
+              },
+            },
+          },
+        ]),
+
+        // 4. LOW STOCK (lean = fast)
+        Inventory.find({
+          userId,
+          stock: { $lte: 10 },
+        })
+          .select("productName stock -_id")
+          .lean(),
+      ]);
 
     res.json({
-      todaySales: todaySalesAgg?.total || 0,
-      monthlyRevenue: monthlyAgg?.total || 0,
-      profit: profitAgg?.profit || 0,
+      todaySales: todaySalesAgg[0]?.total || 0,
+      monthlyRevenue: monthlyAgg[0]?.total || 0,
+      profit: profitAgg[0]?.profit || 0,
 
       lowStockCount: lowStockItems.length,
       lowStockItems: lowStockItems.map((i) => ({

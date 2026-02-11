@@ -4,12 +4,12 @@ import Inventory from "../models/Inventory.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// reusable error handler – life easy ho jayegi
+// reusable error handler
 const sendError = (res, message, status = 400) =>
   res.status(status).json({ message });
 
 /* =========================
-   REGISTER
+   REGISTER (Optimized)
 ========================= */
 export const registerUser = async (req, res) => {
   try {
@@ -19,11 +19,17 @@ export const registerUser = async (req, res) => {
       return sendError(res, "Email and password required");
     }
 
-    const existingUser = await Users.exists({ email });
+    // FAST EXIST CHECK (projection only _id)
+    const existingUser = await Users.findOne(
+      { email },
+      { _id: 1 }
+    ).lean();
+
     if (existingUser) {
       return sendError(res, "User already exists");
     }
 
+    // Hashing heavy hota hai – await sahi hai
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await Users.create({
@@ -42,22 +48,28 @@ export const registerUser = async (req, res) => {
 };
 
 /* =========================
-   LOGIN
+   LOGIN (Optimized)
 ========================= */
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await Users.findOne({ email }).select("+password +tokenVersion");
+    // Sirf required fields select
+    const user = await Users.findOne(
+      { email },
+      { password: 1, tokenVersion: 1, email: 1, businessName: 1 }
+    ).lean();
+
     if (!user) return sendError(res, "Invalid credentials");
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return sendError(res, "Invalid credentials");
 
+    // MINIMAL JWT PAYLOAD = fast verify
     const token = jwt.sign(
       {
         id: user._id,
-        tokenVersion: user.tokenVersion,
+        v: user.tokenVersion,
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -78,13 +90,14 @@ export const loginUser = async (req, res) => {
 };
 
 /* =========================
-   LOGOUT ALL DEVICES
+   LOGOUT ALL DEVICES (FAST)
 ========================= */
 export const logoutAllDevices = async (req, res) => {
   try {
-    await Users.findByIdAndUpdate(req.user.id, {
-      $inc: { tokenVersion: 1 },
-    });
+    await Users.updateOne(
+      { _id: req.user.id },
+      { $inc: { tokenVersion: 1 } }
+    );
 
     res.json({ message: "Logged out from all devices" });
   } catch (error) {
@@ -93,16 +106,17 @@ export const logoutAllDevices = async (req, res) => {
 };
 
 /* =========================
-   DELETE ACCOUNT (FULL CLEAN)
+   DELETE ACCOUNT (PARALLEL CLEAN)
 ========================= */
 export const deleteAccount = async (req, res) => {
   try {
     const userId = req.user.id;
 
+    // SAB EK SAATH – time bacha 💨
     await Promise.all([
       Billing.deleteMany({ createdBy: userId }),
       Inventory.deleteMany({ userId }),
-      Users.findByIdAndDelete(userId),
+      Users.deleteOne({ _id: userId }),
     ]);
 
     res.json({ message: "Account deleted successfully" });
