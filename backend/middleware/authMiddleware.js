@@ -14,9 +14,9 @@ const authMiddleware = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await Users.findById(decoded.id);
 
-    if (!user || user.tokenVersion !== decoded.tokenVersion) {
-      return res.status(401).json({ message: "Session expired" });
-    }
+    if (!user) {
+  return res.status(401).json({ message: "User not found" });
+}
 
     req.user = { id: user._id };
     next();

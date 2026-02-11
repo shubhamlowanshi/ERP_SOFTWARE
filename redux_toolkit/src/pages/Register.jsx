@@ -23,7 +23,6 @@ const Register = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // 📱 Mobile: always start with +91 & allow only numbers after that
     if (name === "mobile") {
       if (!value.startsWith("+91")) return;
       const number = value.slice(3);
@@ -36,63 +35,40 @@ const Register = () => {
 
   const validateForm = () => {
     const {
-      businessName,
-      businessType,
-      gstNumber,
-      panNumber,
-      ownerName,
-      mobile,
-      email,
-      city,
-      state,
-      address,
-      password,
-      confirmPassword,
+      businessName, businessType, gstNumber, panNumber,
+      ownerName, mobile, email, city, state,
+      address, password, confirmPassword,
     } = formData;
 
     if (
-      !businessName ||
-      !businessType ||
-      !gstNumber ||
-      !panNumber ||
-      !ownerName ||
-      !mobile ||
-      !email ||
-      !city ||
-      !state ||
-      !address ||
-      !password ||
-      !confirmPassword
+      !businessName || !businessType || !gstNumber || !panNumber ||
+      !ownerName || !mobile || !email || !city || !state ||
+      !address || !password || !confirmPassword
     ) {
       alert("All fields are mandatory ❗");
       return false;
     }
 
-    // 📧 Email
     if (!/^\S+@\S+\.\S+$/.test(email)) {
       alert("Invalid email format ❌");
       return false;
     }
 
-    // 📱 Mobile
     if (mobile.length !== 13) {
       alert("Mobile number must be 10 digits with +91 ❌");
       return false;
     }
 
-    // 🧾 GST (15 chars)
     if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstNumber)) {
       alert("Invalid GST Number ❌");
       return false;
     }
 
-    // 🆔 PAN
     if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber)) {
       alert("Invalid PAN Number ❌");
       return false;
     }
 
-    // 🔐 Password
     if (password.length < 6) {
       alert("Password must be at least 6 characters 🔐");
       return false;
@@ -108,7 +84,6 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     const res = await fetch("http://localhost:5000/api/auth/register", {
@@ -127,43 +102,127 @@ const Register = () => {
     }
   };
 
+  const inputStyle =
+    "w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all bg-gray-50";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white p-8 rounded-xl shadow w-full max-w-2xl">
-        <h2 className="text-2xl font-semibold mb-6 text-center">
-          Create Your ERP Account
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-blue-50 px-4 py-8">
+
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-3xl border border-gray-100">
+
+        {/* HEADER */}
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">
+            Start Your Digital Dukaan 🚀
+          </h2>
+          <p className="text-gray-500 mt-1">
+            30 seconds me pura ERP ready
+          </p>
+        </div>
 
         <form
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          className="grid grid-cols-1 md:grid-cols-2 gap-5"
         >
-          <input name="businessName" placeholder="Business Name" className="input" onChange={handleChange} />
-          <input name="businessType" placeholder="Business Type" className="input" onChange={handleChange} />
-          <input name="gstNumber" placeholder="GST Number" className="input uppercase" onChange={handleChange} />
-          <input name="panNumber" placeholder="PAN Number" className="input uppercase" onChange={handleChange} />
-          <input name="ownerName" placeholder="Owner Full Name" className="input" onChange={handleChange} />
-          <input name="mobile" placeholder="+91XXXXXXXXXX" className="input" value={formData.mobile} onChange={handleChange} />
-          <input name="email" placeholder="Email" className="input" onChange={handleChange} />
-          <input name="city" placeholder="City" className="input" onChange={handleChange} />
-          <input name="state" placeholder="State" className="input" onChange={handleChange} />
-          <input name="country" className="input" value="India" readOnly />
 
-          <input type="password" name="password" placeholder="Password" className="input" onChange={handleChange} />
-          <input type="password" name="confirmPassword" placeholder="Confirm Password" className="input" onChange={handleChange} />
+          {/* Business */}
+          <div>
+            <label className="label">Business Name</label>
+            <input name="businessName" className={inputStyle} onChange={handleChange} />
+          </div>
 
-          <textarea
-            name="address"
-            placeholder="Business Address"
-            className="input md:col-span-2"
-            rows={3}
-            onChange={handleChange}
-          />
+          <div>
+            <label className="label">Business Type</label>
+            <input name="businessType" className={inputStyle} onChange={handleChange} />
+          </div>
 
-          <button className="md:col-span-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold">
+          {/* GST / PAN */}
+          <div>
+            <label className="label">GST Number</label>
+            <input name="gstNumber" className={inputStyle + " uppercase"} onChange={handleChange} />
+          </div>
+
+          <div>
+            <label className="label">PAN Number</label>
+            <input name="panNumber" className={inputStyle + " uppercase"} onChange={handleChange} />
+          </div>
+
+          {/* Owner */}
+          <div>
+            <label className="label">Owner Name</label>
+            <input name="ownerName" className={inputStyle} onChange={handleChange} />
+          </div>
+
+          <div>
+            <label className="label">Mobile</label>
+            <input
+              name="mobile"
+              value={formData.mobile}
+              className={inputStyle}
+              onChange={handleChange}
+            />
+          </div>
+
+          {/* Contact */}
+          <div>
+            <label className="label">Email</label>
+            <input name="email" className={inputStyle} onChange={handleChange} />
+          </div>
+
+          <div>
+            <label className="label">City</label>
+            <input name="city" className={inputStyle} onChange={handleChange} />
+          </div>
+
+          <div>
+            <label className="label">State</label>
+            <input name="state" className={inputStyle} onChange={handleChange} />
+          </div>
+
+          <div>
+            <label className="label">Country</label>
+            <input value="India" readOnly className={inputStyle + " opacity-70"} />
+          </div>
+
+          {/* Passwords */}
+          <div>
+            <label className="label">Password</label>
+            <input type="password" name="password" className={inputStyle} onChange={handleChange} />
+          </div>
+
+          <div>
+            <label className="label">Confirm Password</label>
+            <input type="password" name="confirmPassword" className={inputStyle} onChange={handleChange} />
+          </div>
+
+          {/* Address */}
+          <div className="md:col-span-2">
+            <label className="label">Business Address</label>
+            <textarea
+              name="address"
+              rows={3}
+              className={inputStyle}
+              onChange={handleChange}
+            />
+          </div>
+
+          {/* Submit */}
+          <button className="md:col-span-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white py-3 rounded-xl font-semibold transition-all">
             Register & Continue 🚀
           </button>
+
         </form>
+
+        <div className="text-center text-sm text-gray-500 mt-5">
+          Already a pro?{" "}
+          <span
+            onClick={() => navigate("/login")}
+            className="text-blue-600 hover:underline cursor-pointer"
+          >
+            Login here
+          </span>
+        </div>
+
       </div>
     </div>
   );

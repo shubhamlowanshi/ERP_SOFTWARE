@@ -1,5 +1,15 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import {
+  FiHome,
+  FiBox,
+  FiShoppingCart,
+  FiFileText,
+  FiBarChart2,
+  FiSettings,
+  FiUsers,
+  FiLogOut
+} from "react-icons/fi";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -15,18 +25,19 @@ const Sidebar = () => {
   const getInitials = (name = "") => {
     return name
       .split(" ")
-      .map(word => word[0])
+      .map((word) => word[0])
       .join("")
       .substring(0, 2)
       .toUpperCase();
   };
 
   const linkClass = ({ isActive }) =>
-    `block px-4 py-2 rounded-lg font-medium transition
-     ${isActive
-      ? "bg-blue-600 text-white"
-      : "text-gray-700 hover:bg-gray-100"
-    }`;
+    `flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200
+     ${
+       isActive
+         ? "bg-blue-600 text-white shadow-md scale-[0.98]"
+         : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+     }`;
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -35,38 +46,63 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="w-64 bg-white border-r hidden md:flex flex-col fixed h-screen">
+    <aside
+      className="w-64 bg-white border-r hidden md:flex flex-col fixed h-screen
+                 shadow-sm"
+    >
       {/* LOGO */}
-      <div className="p-6 font-bold text-xl text-blue-600 border-b">
-        ERP System
+      <div className="p-6 font-bold text-2xl text-blue-600 border-b tracking-wide">
+        🚀 ERP System
       </div>
 
       {/* USER INFO */}
-      <div className="px-6 py-4 border-b flex items-center gap-3">
-        {/* USER LOGO */}
-        <div className="w-12 h-12 rounded-full bg-blue-600 text-white
-                        flex items-center justify-center font-bold text-lg">
+      <div className="px-6 py-5 border-b flex items-center gap-4 bg-gradient-to-r from-blue-50 to-white">
+        <div
+          className="w-12 h-12 rounded-full bg-blue-600 text-white
+                     flex items-center justify-center font-bold text-lg
+                     shadow-md"
+        >
           {getInitials(user?.ownerName || user?.businessName || "U")}
         </div>
 
-        <div>
-          <p className="font-semibold text-gray-800 leading-tight">
-            {user?.ownerName || user?.businessName}
+        <div className="overflow-hidden">
+          <p className="font-semibold text-gray-800 leading-tight truncate">
+            {user?.ownerName || user?.businessName || "ERP User"}
           </p>
-          <p className="text-xs text-gray-500">{user?.email}</p>
+          <p className="text-xs text-gray-500 truncate">
+            {user?.email || "welcome@erp.com"}
+          </p>
         </div>
       </div>
 
       {/* NAV */}
-      <nav className="flex-1 p-4 space-y-2">
-        <NavLink to="." end className={linkClass}>Dashboard</NavLink>
-        <NavLink to="inventory" className={linkClass}>Inventory</NavLink>
-        <NavLink to="sales" className={linkClass}>Sales</NavLink>
-        <NavLink to="billings" className={linkClass}>Billing</NavLink>
-        <NavLink to="reports" className={linkClass}>Reports</NavLink>
-        <NavLink to="settings" className={linkClass}>Settings</NavLink>
+      <nav className="flex-1 p-4 space-y-1">
+        <NavLink to="." end className={linkClass}>
+          <FiHome /> Dashboard
+        </NavLink>
+
+        <NavLink to="inventory" className={linkClass}>
+          <FiBox /> Inventory
+        </NavLink>
+
+        <NavLink to="sales" className={linkClass}>
+          <FiShoppingCart /> Sales
+        </NavLink>
+
+        <NavLink to="billings" className={linkClass}>
+          <FiFileText /> Billing
+        </NavLink>
+
+        <NavLink to="reports" className={linkClass}>
+          <FiBarChart2 /> Reports
+        </NavLink>
+
         <NavLink to="customers" className={linkClass}>
-          Customers
+          <FiUsers /> Customers
+        </NavLink>
+
+        <NavLink to="settings" className={linkClass}>
+          <FiSettings /> Settings
         </NavLink>
       </nav>
 
@@ -74,11 +110,11 @@ const Sidebar = () => {
       <div className="p-4 border-t">
         <button
           onClick={logout}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2
-                     text-red-600 font-semibold rounded-lg
-                     hover:bg-red-50 transition"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3
+                     text-red-600 font-semibold rounded-xl
+                     hover:bg-red-50 transition-all"
         >
-          🚪 Logout
+          <FiLogOut /> Logout
         </button>
       </div>
     </aside>

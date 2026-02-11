@@ -18,7 +18,7 @@ const Customers = () => {
 Hello ${c.customerName},
 
 Thank you for shopping with us 🙏
-
+Mr/Mrs ${c.customerName}, we truly appreciate your business and wanted to express our gratitude for choosing us for your needs. Your support means a lot to us, and we look forward to serving you again in the future.
 Total Purchase: ₹${c.totalPurchase}
 
 Visit again ❤️
