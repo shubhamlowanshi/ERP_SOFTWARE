@@ -97,8 +97,8 @@ export const createBill = async (req, res) => {
       paidAmount >= totalAmount
         ? "Paid"
         : paidAmount > 0
-        ? "Partial"
-        : "Pending";
+          ? "Partial"
+          : "Pending";
 
     const bill = await Billing.create(
       [
@@ -184,7 +184,11 @@ export const getDailySales = async (req, res) => {
         $group: {
           _id: {
             date: {
-              $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+              $dateToString: {
+                format: "%Y-%m-%d",
+                date: "$createdAt",
+                timezone: "Asia/Kolkata", // ✅ FIXED
+              },
             },
             productName: "$items.productName",
           },
@@ -217,6 +221,7 @@ export const getDailySales = async (req, res) => {
   }
 };
 
+
 /* =========================
    GET MONTHLY SALES
 ========================= */
@@ -238,8 +243,8 @@ export const getMonthlySales = async (req, res) => {
     ]);
 
     const monthNames = [
-      "Jan","Feb","Mar","Apr","May","Jun",
-      "Jul","Aug","Sep","Oct","Nov","Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
     ];
 
     res.json(

@@ -3,7 +3,6 @@ import SalesChart from "../components/dashboard/charts/SalesChart";
 import DailySalesChart from "../components/dashboard/charts/DailySalesChart";
 import StockChart from "../components/dashboard/charts/StockChart";
 import api from "../api/axios";
-
 const DashboardHome = () => {
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +66,9 @@ const DashboardHome = () => {
           </p>
         </div>
 
-        <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full w-fit">
+        <span className="flex items-center gap-2 text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full w-fit">
+          {/* 💚 Blinking green dot */}
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
           Live Data
         </span>
       </div>

@@ -30,7 +30,7 @@ const Inventory = () => {
         color: "bg-red-100 text-red-700",
       };
     }
-    if (stock < 10) {
+    if (stock <= 10) {
       return {
         label: "Low Stock",
         color: "bg-yellow-100 text-yellow-700",
@@ -303,62 +303,66 @@ const Inventory = () => {
 </div>
 {/* ======== END TOOLBAR ======== */}
 
-      <div className="bg-white rounded-xl shadow overflow-auto">
-        {loading ? (
-          <p className="p-4 text-center text-gray-500">Loading...</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-4 text-left">Product</th>
-                <th className="p-4">Category</th>
-                <th className="p-4">Stock</th>
-                <th className="p-4">Cost</th>
-                <th className="p-4">Selling</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Actions</th>
+      <div className="bg-white rounded-xl shadow">
+  <div className="overflow-auto max-h-[500px]">
+    {loading ? (
+      <p className="p-4 text-center text-gray-500">Loading...</p>
+    ) : (
+      <table className="w-full text-sm">
+        <thead className="bg-gray-100 sticky top-0 z-10">
+          <tr>
+            <th className="p-4 text-left">Product</th>
+            <th className="p-4">Category</th>
+            <th className="p-4">Stock</th>
+            <th className="p-4">Cost</th>
+            <th className="p-4">Selling</th>
+            <th className="p-4">Status</th>
+            <th className="p-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredInventory.map((item) => {
+            const status = getStockStatusUI(item.stock);
+            return (
+              <tr key={item._id} className="border-t text-center">
+                <td className="p-4 text-left font-medium">
+                  {item.productName}
+                </td>
+                <td className="p-4">{item.category}</td>
+                <td className="p-4">{item.stock}</td>
+                <td className="p-4">₹{item.costPrice}</td>
+                <td className="p-4">₹{item.sellingPrice}</td>
+                <td className="p-4">
+                  
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}
+                  >
+                    {status.label}
+                  </span>
+                </td>
+                <td className="p-4 space-x-2">
+                  <button
+                    onClick={() => handleEdit(item)}
+                    className="px-3 py-1 bg-yellow-500 text-white rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item._id)}
+                    className="px-3 py-1 bg-red-600 text-white rounded"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredInventory.map((item) => {
-                const status = getStockStatusUI(item.stock);
-                return (
-                  <tr key={item._id} className="border-t text-center">
-                    <td className="p-4 text-left font-medium">
-                      {item.productName}
-                    </td>
-                    <td className="p-4">{item.category}</td>
-                    <td className="p-4">{item.stock}</td>
-                    <td className="p-4">₹{item.costPrice}</td>
-                    <td className="p-4">₹{item.sellingPrice}</td>
-                    <td className="p-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}
-                      >
-                        {status.label}
-                      </span>
-                    </td>
-                    <td className="p-4 space-x-2">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="px-3 py-1 bg-yellow-500 text-white rounded"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item._id)}
-                        className="px-3 py-1 bg-red-600 text-white rounded"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+            );
+          })}
+        </tbody>
+      </table>
+    )}
+  </div>
+</div>
+
     </div>
   );
 };
