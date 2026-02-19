@@ -52,7 +52,7 @@ const Sidebar = () => {
     >
       {/* LOGO */}
       <div className="p-6 font-bold text-2xl text-blue-600 border-b tracking-wide">
-        🚀 ERP System
+        VyapaarX
       </div>
 
       {/* USER INFO */}
